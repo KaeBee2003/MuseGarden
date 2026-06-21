@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MuseGarden 🌿 — Music Producer's Second Brain</title>
+<meta name="description" content="MuseGarden — brainstorm, organise, and ideate music production ideas. A visual canvas for music producers.">
+<link rel="icon" href="favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+<!--
+  ╔══════════════════════════════════════════════════════════════╗
+  ║  OBSIDIAN THEME SUPPORT                                      ║
+  ║  To use any Obsidian theme:                                  ║
+  ║  1. Copy theme.css from the theme folder into your repo      ║
+  ║  2. Change the href below to point to it                     ║
+  ╚══════════════════════════════════════════════════════════════╝
+-->
+<link id="obsidian-theme" rel="stylesheet" href="theme.css">
+
+<!-- Tokyo Night — built-in default. Overridden by theme.css above. -->
+<style id="theme-dark-defaults">
+body { --sidebar-w: 280px; }
+.theme-dark {
+  color-scheme: dark;
+  --accent-h: 202; --accent-s: 100%; --accent-l: 75%;
+  --bg_dark2: rgb(15,15,20);
+  --bg_dark:  rgb(22,22,30);
+  --bg:       rgb(26,27,38);
+  --bg_highlight_x: 41,46,66; --bg_highlight: rgb(41,46,66);
+  --bg_highlight_dark: rgb(36,40,59);
+  --fg:       rgb(192,202,245);
+  --fg_dark:  rgb(169,177,214);
+  --comment:  rgb(86,95,137);
+  --blue0_x:  61,89,161; --blue0: rgb(61,89,161);
+  --blue:     rgb(122,162,247);
+  --cyan_x:   125,207,255; --cyan: rgb(125,207,255);
+  --magenta_x:187,154,247; --magenta: rgb(187,154,247);
+  --orange:   rgb(255,158,100);
+  --yellow:   rgb(224,175,104);
+  --green:    rgb(158,206,106);
+  --teal:     rgb(26,188,156);
+  --red_x:    255,117,127; --red: rgb(255,117,127);
+  --red1:     rgb(219,75,75);
+  --pink:     rgb(217,0,105);
+
+  --background-primary:         var(--bg);
+  --background-primary-alt:     var(--bg);
+  --background-secondary:       var(--bg_dark);
+  --background-modifier-border: var(--bg_highlight);
+  --background-modifier-hover:  rgba(255,255,255,0.06);
+  --text-normal:                var(--fg);
+  --text-muted:                 var(--fg_dark);
+  --text-faint:                 var(--comment);
+  --text-accent:                var(--magenta);
+  --text-accent-hover:          var(--cyan);
+  --text-on-accent:             var(--bg);
+  --interactive-accent:         hsl(var(--accent-h),var(--accent-s),var(--accent-l));
+  --interactive-accent-hover:   var(--blue);
+  --interactive-normal:         var(--bg_dark);
+  --interactive-hover:          var(--bg);
+  --background-modifier-error:  var(--red1);
+  --scrollbar-thumb-bg:         var(--comment);
+  --h1-color: var(--red);
+  --h2-color: var(--yellow);
+  --h3-color: var(--green);
+  --h4-color: var(--cyan);
+  --h5-color: var(--blue);
+  --h6-color: var(--magenta);
+  --tag-color:            var(--magenta);
+  --tag-background:       rgba(187,154,247,0.14);
+  --tag-color-hover:      var(--cyan);
+  --tag-background-hover: rgba(125,207,255,0.14);
+  --code-background:      var(--bg_highlight_dark);
+  --code-normal:          var(--fg);
+  --bold-color:           var(--cyan);
+  --italic-color:         var(--cyan);
+  --link-color:           var(--magenta);
+  --link-color-hover:     var(--cyan);
+  --checkbox-color:       var(--green);
+}
+</style>
+
+<link rel="stylesheet" href="app.css">
+</head>
+<body class="theme-dark">
+
+<!-- Loader -->
+<div id="loader">
+  <div class="loader-ring"></div>
+  <p id="loaderMsg">Starting MuseGarden…</p>
+</div>
+
+<!-- App -->
+<div id="app">
+  <!-- Toolbar -->
+  <div id="toolbar">
+    <button id="hamburger" title="Toggle Sidebar">
+      <span class="material-symbols-outlined">menu</span>
+    </button>
+    <div style="flex:1"></div>
+    <button id="saveStatus" title="Save (Ctrl+S)">
+      <span class="material-symbols-outlined">save</span>
+      <span id="saveStatusText">SAVE CHANGES</span>
+    </button>
+    <button id="sourcesBtn" title="Manage Music Sources">
+      <span class="material-symbols-outlined">folder_shared</span>
+      <span>SOURCES</span>
+    </button>
+    <button id="settingsBtn" title="Settings">
+      <span class="material-symbols-outlined">settings</span>
+      <span>SETTINGS</span>
+    </button>
+  </div>
+  <div id="browserBanner" class="browser-banner" style="display:none;">
+    <span class="material-symbols-outlined">visibility_off</span>
+    Running in Browser — local file folder access is only available in the Electron desktop app.
+  </div>
+
+  <!-- Main -->
+  <div id="main">
+    <!-- Sidebar -->
+    <div id="sidebar">
+      <div id="sidebarHeader">
+        <button class="sidebar-tab-btn active" data-tab="files">FILES</button>
+        <button class="sidebar-tab-btn" data-tab="canvases">CANVASES</button>
+      </div>
+
+      <!-- Search -->
+      <div id="sidebarSearch">
+        <input id="sidebarSearchInput" placeholder="Search…">
+      </div>
+
+      <!-- Tag filter -->
+      <div id="tagFilterArea">
+        <button id="tagFilterBtn" class="tag-filter-btn">
+          <span class="material-symbols-outlined" style="font-size:16px;">filter_list</span> Filter by Tag
+        </button>
+        <div id="tagFilterContainer" class="tag-filter-container">
+          <div id="tagFilterList" class="tag-filter-list"></div>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <div id="sidebarContent"></div>
+
+      <!-- View controls (files only) -->
+      <div id="viewControls">
+        <button class="view-btn active" data-view="root">ROOT</button>
+        <button class="view-btn" data-view="list">LIST</button>
+      </div>
+
+      <!-- Resize handle -->
+      <div id="sidebarResizer"></div>
+    </div>
+
+    <!-- Canvas Column -->
+    <div id="canvasCol">
+      <!-- Tab bar -->
+      <div id="tabBar">
+        <button id="canvasBackBtn" style="display:none;" title="Back to previous canvas" class="canvas-back-btn">
+          <span class="material-symbols-outlined">arrow_back</span>
+        </button>
+        <div id="canvasTabs">
+          <!-- tabs rendered by JS -->
+          <div id="tabAddWrap">
+            <button id="tabAddBtn" title="Add canvas tab">
+              <span class="material-symbols-outlined">add</span>
+            </button>
+          </div>
+        </div>
+      </div>
+      <!-- Canvas Area -->
+      <div id="canvasArea">
+        <!-- SVG defs (global) -->
+        <svg style="position:absolute;width:0;height:0">
+          <defs>
+            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+              <polygon points="0 0, 10 3.5, 0 7" fill="color-mix(in srgb, var(--accent) 60%, transparent)"/>
+            </marker>
+            <marker id="arrowhead-sel" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+              <polygon points="0 0, 10 3.5, 0 7" fill="var(--accent)"/>
+            </marker>
+          </defs>
+        </svg>
+
+        <!-- Onboarding screen (shown when no sources) -->
+        <div id="onboarding">
+          <div class="ob-card">
+            <div class="ob-logo"><span class="material-symbols-outlined" style="font-size:48px;color:var(--accent);">spa</span></div>
+            <h1 class="ob-title">Welcome to MuseGarden</h1>
+            <p class="ob-sub">Your music producer's second brain.<br>Add your music folder to get started.</p>
+            <div class="ob-steps">
+              <div class="ob-step">
+                <span class="ob-step-num">1</span>
+                <div>
+                  <strong>Add a local folder</strong><br>
+                  <span>Point to your FL Studio Projects folder or any music folder on your PC.</span>
+                </div>
+              </div>
+              <div class="ob-step">
+                <span class="ob-step-num">2</span>
+                <div>
+                  <strong>Drag folders onto the canvas</strong><br>
+                  <span>Creates a Project node — scroll through all tracks inside.</span>
+                </div>
+              </div>
+              <div class="ob-step">
+                <span class="ob-step-num">3</span>
+                <div>
+                  <strong>Connect ideas with arrows</strong><br>
+                  <span>Drag from the dots on the edge of any node to connect it to another.</span>
+                </div>
+              </div>
+            </div>
+            <button class="ob-close-btn" onclick="closeWelcomePopup()" title="Close welcome popup"><span class="material-symbols-outlined">close</span></button>
+            <button class="ob-btn" onclick="openSourcesModal()">
+              <span class="material-symbols-outlined">folder_open</span> Add My Music Folder
+            </button>
+            <p class="ob-hint">Works offline · Saves locally · Chrome / Edge required for local files</p>
+          </div>
+        </div>
+
+      </div><!-- /canvasArea -->
+      
+      <!-- Canvas Toolbar -->
+      <div id="canvasToolbar">
+        <button id="canvasToolZoomFit" class="canvas-tool-btn" title="Zoom to Fit (Ctrl+Shift+F)">
+          <span class="material-symbols-outlined">zoom_out_map</span>
+          <span class="tool-label">Zoom to Fit</span>
+        </button>
+        <button id="canvasToolZoomSel" class="canvas-tool-btn" title="Zoom to Selection">
+          <span class="material-symbols-outlined">zoom_in</span>
+          <span class="tool-label">Zoom Selection</span>
+        </button>
+        <button id="canvasToolPanSel" class="canvas-tool-btn" title="Pan to Selection">
+          <span class="material-symbols-outlined">filter_center_focus</span>
+          <span class="tool-label">Pan Selection</span>
+        </button>
+        <div style="width:1px;height:24px;background:var(--border);margin:0 8px;"></div>
+        <button id="canvasToolNewNode" class="canvas-tool-btn" title="New Embedded Node">
+          <span class="material-symbols-outlined">add_circle</span>
+          <span class="tool-label">New Node</span>
+        </button>
+        <button id="canvasToolAddCanvas" class="canvas-tool-btn" title="Add Canvas">
+          <span class="material-symbols-outlined">add_box</span>
+          <span class="tool-label">Add Canvas</span>
+        </button>
+      </div>
+    </div><!-- /canvasCol -->
+  </div><!-- /main -->
+
+  <!-- Bottom Player -->
+  <div id="bottomBar">
+    <div class="bar-top">
+      <button id="barPlayBtn">
+        <span class="material-symbols-outlined">play_arrow</span>
+      </button>
+      <div class="bar-info">
+        <div id="barTitle">—</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div id="barTags"></div>
+          <button id="barAddTagBtn" class="c-tag-edit-btn" title="Add tag to currently playing song" style="margin-top:4px;">
+            <span class="material-symbols-outlined" style="font-size:12px;">add</span>
+          </button>
+        </div>
+      </div>
+      <div class="bar-times"><span id="barCur">0:00</span> / <span id="barTot">--:--</span></div>
+      <div id="barVolWrap">
+        <span class="material-symbols-outlined" id="barVolIcon">volume_up</span>
+        <div id="barVolSliderPop">
+          <input type="range" id="barVolSlider" min="0" max="1" step="0.01" value="0.8">
+        </div>
+      </div>
+    </div>
+    <div class="bar-progress-wrap" id="barProgressWrap">
+      <div class="bar-progress-fill" id="barProgressFill"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Explorer context menu -->
+<div id="explorerCtxMenu">
+  <div class="ectx-item" data-action="tags">
+    <span class="material-symbols-outlined" style="font-size:18px;">label</span>
+    <span>Manage Tags</span>
+  </div>
+  <div class="ectx-item" data-action="play">
+    <span class="material-symbols-outlined" style="font-size:18px;">play_arrow</span>
+    <span>Play Song</span>
+  </div>
+  <div class="ectx-item" data-action="addToCanvas">
+    <span class="material-symbols-outlined" style="font-size:18px;">add_to_photos</span>
+    <span>Add to Canvas</span>
+  </div>
+</div>
+
+<div id="toastContainer"></div>
+
+<!-- Slash Menu -->
+<div id="slashMenu">
+  <div class="slash-item" data-action="project">
+    <span class="slash-item-icon material-symbols-outlined">folder</span>
+    <span class="slash-item-label">Project Folder</span>
+    <span class="slash-item-key">project</span>
+  </div>
+  <div class="slash-item" data-action="song">
+    <span class="slash-item-icon material-symbols-outlined">music_note</span>
+    <span class="slash-item-label">Add Single Song</span>
+    <span class="slash-item-key">song</span>
+  </div>
+  <div class="slash-item" data-action="youtube">
+    <span class="slash-item-icon material-symbols-outlined">smart_display</span>
+    <span class="slash-item-label">Embed YouTube</span>
+    <span class="slash-item-key">yt</span>
+  </div>
+  <div class="slash-item" data-action="spotify">
+    <span class="slash-item-icon material-symbols-outlined">headphones</span>
+    <span class="slash-item-label">Embed Spotify</span>
+    <span class="slash-item-key">sp</span>
+  </div>
+  <div class="slash-item" data-action="canvas">
+    <span class="slash-item-icon material-symbols-outlined">insert_drive_file</span>
+    <span class="slash-item-label">Embed Canvas</span>
+    <span class="slash-item-key">canvas</span>
+  </div>
+  <div class="slash-item" data-action="rect">
+    <span class="slash-item-icon material-symbols-outlined">crop_square</span>
+    <span class="slash-item-label">New Rectangle</span>
+    <span class="slash-item-key">rect</span>
+  </div>
+</div>
+
+<!-- Context Menu -->
+<div id="ctxMenu">
+  <div class="ctx-item" data-action="newRect">
+    <span class="material-symbols-outlined" style="font-size:18px;">crop_square</span>
+    <span>New Rectangle</span>
+  </div>
+  <div class="ctx-item" data-action="duplicate">
+    <span class="material-symbols-outlined" style="font-size:18px;">content_copy</span>
+    <span>Duplicate</span>
+    <span class="ctx-key">Ctrl+D</span>
+  </div>
+  <div class="ctx-item" data-action="paste">
+    <span class="material-symbols-outlined" style="font-size:18px;">content_paste</span>
+    <span>Paste</span>
+  </div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item" data-action="zoomFit">
+    <span class="material-symbols-outlined" style="font-size:18px;">zoom_out_map</span>
+    <span>Zoom to Fit</span>
+  </div>
+  <div class="ctx-item" data-action="zoomSel">
+    <span class="material-symbols-outlined" style="font-size:18px;">zoom_in</span>
+    <span>Zoom to Selection</span>
+  </div>
+  <div class="ctx-item" data-action="panSel">
+    <span class="material-symbols-outlined" style="font-size:18px;">filter_center_focus</span>
+    <span>Pan to Selection</span>
+  </div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item" data-action="undo">
+    <span class="material-symbols-outlined" style="font-size:18px;">undo</span>
+    <span>Undo</span>
+    <span class="ctx-key">Ctrl+Z</span>
+  </div>
+  <div class="ctx-item" data-action="save">
+    <span class="material-symbols-outlined" style="font-size:18px;">save</span>
+    <span>Save</span>
+    <span class="ctx-key">Ctrl+S</span>
+  </div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item" data-action="addExistingCanvas">
+    <span class="material-symbols-outlined" style="font-size:18px;">insert_drive_file</span>
+    <span>Add Existing Canvas</span>
+  </div>
+  <div class="ctx-item" data-action="addNewCanvas">
+    <span class="material-symbols-outlined" style="font-size:18px;">add_circle</span>
+    <span>Add New Canvas</span>
+  </div>
+  <div class="ctx-item" data-action="newCanvas">
+    <span class="material-symbols-outlined" style="font-size:18px;">tab</span>
+    <span>New Canvas Tab</span>
+  </div>
+  <div class="ctx-item danger" data-action="delete">
+    <span class="material-symbols-outlined" style="font-size:18px;">delete</span>
+    <span>Delete</span>
+    <span class="ctx-key">Del</span>
+  </div>
+</div>
+
+<!-- ─── Modals ──────────────────────────────────────────────────────────────── -->
+
+<!-- Delete confirm -->
+<div class="modal-overlay" id="deleteConfirm">
+  <div class="modal">
+    <h3 style="display:flex;align-items:center;gap:8px;"><span class="material-symbols-outlined">delete</span> Delete?</h3>
+    <p style="font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:16px">This will remove the selected element. This action cannot be undone.</p>
+    <div class="modal-btns">
+      <button class="modal-btn" id="deleteCancelBtn">Cancel</button>
+      <button class="modal-btn danger" id="deleteConfirmBtn">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- YouTube URL -->
+<div class="modal-overlay" id="ytModal">
+  <div class="modal">
+    <h3 style="display:flex;align-items:center;gap:8px;"><span class="material-symbols-outlined">play_circle</span> YouTube Embed</h3>
+    <input class="modal-input" id="ytUrlInput" placeholder="https://youtube.com/watch?v=…">
+    <div class="modal-btns">
+      <button class="modal-btn" id="ytCancelBtn">Cancel</button>
+      <button class="modal-btn primary" id="ytConfirmBtn">Embed</button>
+    </div>
+  </div>
+</div>
+
+<!-- Spotify URL -->
+<div class="modal-overlay" id="spModal">
+  <div class="modal">
+    <h3 style="display:flex;align-items:center;gap:8px;"><span class="material-symbols-outlined">music_note</span> Spotify Embed</h3>
+    <input class="modal-input" id="spUrlInput" placeholder="https://open.spotify.com/track/…">
+    <div class="modal-btns">
+      <button class="modal-btn" id="spCancelBtn">Cancel</button>
+      <button class="modal-btn primary" id="spConfirmBtn">Embed</button>
+    </div>
+  </div>
+</div>
+
+<!-- Tag manager -->
+<div class="modal-overlay" id="tagModal">
+  <div class="modal">
+    <h3 style="display:flex;align-items:center;gap:8px;"><span class="material-symbols-outlined">label</span> Manage Tags</h3>
+    <p id="tagModalSongName" style="font-size:11px;color:var(--muted);margin-bottom:12px;letter-spacing:normal;"></p>
+    <div id="tagsModalList"></div>
+    <div id="tagModalGlobalPool" style="margin-top:12px;border-top:1px solid var(--background-modifier-border);padding-top:12px;max-height:120px;overflow-y:auto;"></div>
+    <div style="display:flex;gap:8px;margin-top:12px;margin-bottom:12px;">
+      <input class="modal-input" id="tagNameInput" placeholder="New tag name…" style="margin:0;flex:1;">
+      <button class="modal-btn primary" id="addTagBtn" style="margin:0;flex-shrink:0;">ADD</button>
+    </div>
+    <div class="modal-btns">
+      <button class="modal-btn primary" id="tagDoneBtn">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- Relocate file / Pick folder (reused for project picker) -->
+<div class="modal-overlay" id="relocateModal">
+  <div class="modal" style="min-width:420px">
+    <h3 style="display:flex;align-items:center;gap:8px;"><span class="material-symbols-outlined">folder</span> Relocate File</h3>
+    <p style="font-size:11px;color:var(--muted);margin-bottom:12px">Search and select:</p>
+    <input class="modal-input" id="relocateSearch" placeholder="Search songs…">
+    <div id="relocateList"></div>
+    <div class="modal-btns">
+      <button class="modal-btn" id="relocateCancelBtn">Cancel</button>
+      <button class="modal-btn primary" id="relocateConfirmBtn">Select</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings modal -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal" style="min-width:420px; max-width:520px;">
+    <div class="modal-header">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="material-symbols-outlined">settings</span>
+        <span>Settings</span>
+      </div>
+      <button class="btn-icon" id="closeSettings" title="Close settings"><span class="material-symbols-outlined">close</span></button>
+    </div>
+    <div class="settings-grid">
+      <div class="settings-row">
+        <label>Auto save</label>
+        <label class="switch"><input type="checkbox" id="autoSaveToggle"><span class="slider"></span></label>
+      </div>
+      <div class="settings-row">
+        <label>Auto save interval (seconds)</label>
+        <input type="number" id="autoSaveInterval" min="5" step="5" class="modal-input" style="width:120px;">
+      </div>
+      <div class="settings-row settings-full">
+        <label>Canvas backup folder</label>
+        <div id="defaultFolderPath" class="settings-value">Documents/MuseGarden/Canvases</div>
+      </div>
+      <div class="settings-row settings-full">
+        <button class="modal-btn wide" id="openBackupFolderBtn">Open backup folder</button>
+      </div>
+      <div class="settings-row settings-full">
+        <div id="backupNote" class="settings-value" style="font-size:12px;color:var(--muted);line-height:1.5;">
+          Your desktop app saves canvas state automatically to this folder in Documents. The file is named <code>musegarden-latest.json</code>.
+        </div>
+      </div>
+      <div class="settings-row">
+        <label>Show welcome popup</label>
+        <label class="switch"><input type="checkbox" id="showWelcomeToggle"><span class="slider"></span></label>
+      </div>
+    </div>
+    <div class="modal-btns">
+      <button class="modal-btn primary" id="saveSettingsBtn">Save</button>
+      <button class="modal-btn" id="cancelSettingsBtn">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Consolidated Add Canvas Modal -->
+<div class="modal-overlay" id="addCanvasModal">
+  <div class="modal" style="min-width: 440px; max-width: 500px;">
+    <h3 style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+      <span class="material-symbols-outlined">tab</span> Add Canvas
+    </h3>
+    
+    <!-- Section 1: Create New -->
+    <div style="margin-bottom: 20px;">
+      <h4 style="margin: 0 0 8px; font-size: 11px; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Create New Canvas</h4>
+      <div style="display:flex; gap:8px;">
+        <input class="modal-input" id="newCanvasNameInput" placeholder="New canvas name…" style="margin:0; flex:1;">
+        <button class="modal-btn primary" id="createNewCanvasBtn" style="margin:0; flex-shrink:0;">Create</button>
+      </div>
+    </div>
+
+    <!-- Divider -->
+    <div style="border-top: 1px solid var(--background-modifier-border); margin: 20px 0;"></div>
+
+    <!-- Section 2: Open Existing -->
+    <div style="margin-bottom: 20px;">
+      <h4 style="margin: 0 0 8px; font-size: 11px; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Open Existing Canvas</h4>
+      <input class="modal-input" id="existingCanvasSearch" placeholder="Search canvases…" style="margin-bottom:8px; width:100%;">
+      <div id="existingCanvasList" style="max-height: 150px; overflow-y: auto; border: 1px solid var(--background-modifier-border); border-radius: 6px; background: rgba(0,0,0,0.2);"></div>
+    </div>
+
+    <div class="modal-btns">
+      <button class="modal-btn" id="addCanvasCancelBtn">Cancel</button>
+      <button class="modal-btn primary" id="openExistingCanvasBtn" style="display:none;">Open Selected</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── SOURCES MODAL ──────────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="sourcesModal">
+  <div class="modal sources-modal">
+    <div class="sources-modal-header">
+      <h3 style="display:flex;align-items:center;gap:8px;"><span class="material-symbols-outlined">folder_shared</span> Music Sources</h3>
+      <button class="btn-icon" id="closeSources" title="Close"><span class="material-symbols-outlined">close</span></button>
+    </div>
+    <p class="sources-modal-sub">Add local folders or a GitHub repo. Works offline with local folders.</p>
+
+    <!-- Current sources list -->
+    <div id="sourcesList"></div>
+
+    <!-- Missing sources remapping section -->
+    <div id="missingSourcesContainer" style="display:none; flex-shrink: 0; padding: 12px 24px; border-top: 1px dashed var(--border); border-bottom: 1px dashed var(--border); background: rgba(220,50,50,0.04); margin-bottom: 12px;">
+      <div style="display:flex; align-items:center; gap:8px; color:var(--accent3); font-weight:600; font-size:12px; margin-bottom:8px;">
+        <span class="material-symbols-outlined" style="font-size:16px;">folder_off</span>
+        <span>Missing Sources (Referenced by Projects)</span>
+      </div>
+      <div id="missingSourcesList" style="display:flex; flex-direction:column; gap:6px; max-height:120px; overflow-y:auto;"></div>
+    </div>
+
+    <!-- Add local folder -->
+    <div class="sources-add-section">
+      <button class="modal-btn primary wide" id="addLocalFolderBtn">
+        <span class="material-symbols-outlined">folder_open</span> Add Local Music Folder
+      </button>
+      <p class="sources-hint">Pick any folder (e.g. your FL Studio Projects folder). All audio files inside will be scanned automatically.</p>
+    </div>
+
+    <!-- Add GitHub -->
+    <div class="sources-add-section">
+      <button class="modal-btn wide" id="addGithubToggleBtn">
+        <span class="material-symbols-outlined">cloud_upload</span> Add GitHub Repository
+      </button>
+      <div id="githubSourceForm" class="gh-form">
+        <input class="modal-input" id="ghOwnerInput" placeholder="GitHub username (e.g. kaebee2003)">
+        <input class="modal-input" id="ghRepoInput"  placeholder="Repository name (e.g. Song-Backup)">
+        <input class="modal-input" id="ghWorkerInput" placeholder="Worker URL (optional, uses default)">
+        <div id="ghConnectStatus" style="font-size:11px;color:var(--muted);min-height:16px;"></div>
+        <button class="modal-btn primary" id="githubSourceConfirmBtn">Connect</button>
+      </div>
+    </div>
+
+    <div class="sources-footer">
+      <button class="modal-btn small" id="exportDataBtn"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M5 4L2 11v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-7L19 4"/><path d="M2 11h5l2 3h6l2-3h5"/><path d="M12 14V5"/><path d="M8 9l4-4 4 4"/></svg> Export Canvas Data</button>
+      <button class="modal-btn small" id="importDataBtn"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M5 4L2 11v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-7L19 4"/><path d="M2 11h5l2 3h6l2-3h5"/><path d="M12 2v9"/><path d="M8 7l4 4 4-4"/></svg> Import Canvas Data</button>
+    </div>
+  </div>
+</div>
+
+<!-- Shortcuts overlay -->
+<div id="shortcutsOverlay">
+  <div id="shortcutsBox">
+    <h3 style="display:flex;align-items:center;gap:8px;"><span class="material-symbols-outlined">keyboard</span> Keyboard Shortcuts</h3>
+    <div class="sc-row"><span>New Rectangle</span><span class="sc-key">Double-click canvas</span></div>
+    <div class="sc-row"><span>Save</span><span class="sc-key">Ctrl+S</span></div>
+    <div class="sc-row"><span>Undo</span><span class="sc-key">Ctrl+Z</span></div>
+    <div class="sc-row"><span>Duplicate</span><span class="sc-key">Ctrl+D</span></div>
+    <div class="sc-row"><span>Delete selected</span><span class="sc-key">Del / Backspace</span></div>
+    <div class="sc-row"><span>Slash menu</span><span class="sc-key">/ (in node)</span></div>
+    <div class="sc-row"><span>Pan canvas</span><span class="sc-key">Space + Drag</span></div>
+    <div class="sc-row"><span>Zoom</span><span class="sc-key">Ctrl + Scroll</span></div>
+    <div class="sc-row"><span>Zoom to fit</span><span class="sc-key">Ctrl+Shift+F</span></div>
+    <div class="sc-row"><span>Shortcuts</span><span class="sc-key">?</span></div>
+    <div class="modal-btns" style="margin-top:16px">
+      <button class="modal-btn primary" onclick="document.getElementById('shortcutsOverlay').classList.remove('open')">Close</button>
+    </div>
+  </div>
+</div>
+
+<script src="state.js"></script>
+<script src="storage.js"></script>
+<script src="sources.js"></script>
+<script src="github.js"></script>
+<script src="audio.js"></script>
+<script src="sidebar.js"></script>
+<script src="markdown.js"></script>
+<script src="canvas.js"></script>
+<script src="ui.js"></script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+{
+  "canvases": {
+    "mptqmcjvw2is": {
+      "name": "Canvas 1",
+      "nodes": [
+        {
+          "id": "mptqpfzmswa0",
+          "type": "rect",
+          "x": 386,
+          "y": 164,
+          "w": 280,
+          "h": 130,
+          "title": "Heading",
+          "content": "dgs"
+        },
+        {
+          "id": "mptqpn5ug3vz",
+          "type": "rect",
+          "x": 564,
+          "y": 394,
+          "w": 280,
+          "h": 130,
+          "title": "",
+          "content": ""
+        },
+        {
+          "id": "mptqpqnf456d",
+          "type": "audio",
+          "x": 844,
+          "y": 82,
+          "w": 300,
+          "h": 130,
+          "filePath": "Inspirations/Glitch/Ssavid - How to Flume (Future Bass Tutorial).mp3",
+          "content": ""
+        }
+      ],
+      "arrows": [
+        {
+          "id": "mptqpzr8920g",
+          "from": "mptqpqnf456d",
+          "fromSide": "bottom",
+          "to": "mptqpn5ug3vz",
+          "toSide": "right"
+        }
+      ]
+    }
+  },
+  "tags": {},
+  "settings": {},
+  "openTabs": [
+    "mptqmcjvw2is"
+  ],
+  "activeTab": "mptqmcjvw2is"
+}

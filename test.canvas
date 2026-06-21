@@ -1,0 +1,18 @@
+{
+  "nodes": [
+    {
+      "type": "nested-canvas",
+      "id": "116a29bf-abec-4582-af32-6b0d82d791db",
+      "x": 147,
+      "y": 93.5,
+      "width": 500,
+      "height": 300,
+      "canvas": {
+        "nodes": [],
+        "edges": []
+      },
+      "title": "No title"
+    }
+  ],
+  "edges": []
+}

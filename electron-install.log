@@ -1,0 +1,29 @@
+npm verbose cli C:\Program Files\nodejs\node.exe C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js
+npm info using npm@11.13.0
+npm info using node@v24.17.0
+npm verbose title npm install electron@^26.0.0
+npm verbose argv "install" "electron@^26.0.0" "--save-dev" "--loglevel" "verbose"
+npm verbose logfile logs-max:10 dir:C:\Users\Kae Bee\AppData\Local\npm-cache\_logs\2026-06-20T23_14_35_140Z-
+npm verbose logfile C:\Users\Kae Bee\AppData\Local\npm-cache\_logs\2026-06-20T23_14_35_140Z-debug-0.log
+npm verbose shrinkwrap failed to load node_modules/.package-lock.json out of date, updated: node_modules/electron
+npm http cache https://registry.npmjs.org/electron 92ms (cache hit)
+npm http fetch POST 200 https://registry.npmjs.org/-/npm/v1/security/advisories/bulk 268ms
+npm http cache https://registry.npmjs.org/electron 17ms (cache hit)
+
+up to date, audited 172 packages in 2s
+
+31 packages are looking for funding
+  run `npm fund` for details
+
+1 high severity vulnerability
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+npm verbose cwd D:\M E O W   S I C K\MuseGarden
+npm verbose os Windows_NT 10.0.26100
+npm verbose node v24.17.0
+npm verbose npm  v11.13.0
+npm verbose exit 0
+npm info ok

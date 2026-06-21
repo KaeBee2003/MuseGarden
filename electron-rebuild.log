@@ -1,0 +1,16 @@
+npm verbose cli C:\Program Files\nodejs\node.exe C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js
+npm info using npm@11.13.0
+npm info using node@v24.17.0
+npm verbose title npm rebuild electron
+npm verbose argv "rebuild" "electron" "--loglevel" "verbose"
+npm verbose logfile logs-max:10 dir:C:\Users\Kae Bee\AppData\Local\npm-cache\_logs\2026-06-20T23_14_58_251Z-
+npm verbose logfile C:\Users\Kae Bee\AppData\Local\npm-cache\_logs\2026-06-20T23_14_58_251Z-debug-0.log
+npm info run electron@26.6.10 postinstall node_modules/electron node install.js
+npm info run electron@26.6.10 postinstall { code: 0, signal: null }
+rebuilt dependencies successfully
+npm verbose cwd D:\M E O W   S I C K\MuseGarden
+npm verbose os Windows_NT 10.0.26100
+npm verbose node v24.17.0
+npm verbose npm  v11.13.0
+npm verbose exit 0
+npm info ok
