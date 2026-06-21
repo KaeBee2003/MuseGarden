@@ -246,10 +246,10 @@ function setDirty(v) {
   if (!el) return;
   if (v) {
     el.className = "unsaved";
-    if (txt) txt.textContent = "Unsaved changes";
+    if (txt) txt.textContent = "UNSAVED CHANGES";
   } else {
     el.className = "saved";
-    if (txt) txt.textContent = "Changes saved";
+    if (txt) txt.textContent = "CHANGES SAVED";
   }
 }
 

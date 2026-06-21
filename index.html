@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MuseGarden 🌿 — Music Producer's Second Brain</title>
+<title>MuseGarden</title>
 <meta name="description" content="MuseGarden — brainstorm, organise, and ideate music production ideas. A visual canvas for music producers.">
 <link rel="icon" href="favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -85,6 +85,14 @@ body { --sidebar-w: 280px; }
 <link rel="stylesheet" href="app.css">
 </head>
 <body class="theme-dark">
+
+<!-- Custom titlebar: replaces the native title/icon row so its color
+     matches the app theme. Drag to move the window; native min/max/close
+     buttons are drawn on top by Windows (see titleBarOverlay in main.js). -->
+<div id="customTitlebar">
+  <img src="favicon.png" class="titlebar-icon" alt="">
+  <span>MuseGarden</span>
+</div>
 
 <!-- Loader -->
 <div id="loader">

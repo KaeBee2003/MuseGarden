@@ -566,10 +566,19 @@ function makeRectNode(node, canvasId) {
     descEl.innerText = "";
   }
 
-  // Click on desc: switch to edit mode
+  // First click on an unselected node: just select it, don't edit yet.
+  // Second click while already selected: enter edit mode.
+  // (Selection normally happens via bindNodeDrag's mousedown, but that
+  // handler explicitly skips [contenteditable] targets, so the desc text
+  // needs to handle its own selection step here.)
   descEl.addEventListener("click", e => {
     e.stopPropagation();
     if (descEl.contentEditable === "false") {
+      const wasSelected = selectedNodeIds.has(node.id);
+      if (!wasSelected) {
+        selectNode(node.id, canvasId, e.shiftKey);
+        return; // first click: select only, don't open the editor yet
+      }
       switchToEditMode(descEl, node);
       descEl.focus();
     }
@@ -1206,8 +1215,10 @@ function bindNodeResize(el, node, canvasId) {
 //  CONNECTORS / ARROWS
 // ────────────────────────────────────────────────────────────────────
 function bindConnectors(el, node, canvasId) {
+  const dots = {};
   el.querySelectorAll(".conn-dot").forEach(dot => {
     const side = dot.classList[1]; // right/left/bottom/top
+    dots[side] = dot;
     dot.addEventListener("mousedown", e => {
       e.stopPropagation();
       e.preventDefault();
@@ -1228,6 +1239,46 @@ function bindConnectors(el, node, canvasId) {
       }
     });
   });
+
+  // Only the single connector dot nearest the cursor should be visible, and
+  // only once the cursor gets close to one of the four edge midpoints —
+  // not just anywhere over the node body. Distances are measured in real
+  // screen pixels so the reach feels consistent at any zoom level.
+  const PROXIMITY = 56; // px
+
+  function clearActive() {
+    Object.values(dots).forEach(d => d.classList.remove("active"));
+  }
+
+  el.addEventListener("mousemove", e => {
+    if (isDragging || isResizing || isDrawingArrow) return;
+    const rect = el.getBoundingClientRect();
+    const mx = e.clientX, my = e.clientY;
+
+    const points = {
+      right:  { x: rect.right,            y: rect.top + rect.height / 2 },
+      left:   { x: rect.left,             y: rect.top + rect.height / 2 },
+      bottom: { x: rect.left + rect.width / 2, y: rect.bottom },
+      top:    { x: rect.left + rect.width / 2, y: rect.top    },
+    };
+
+    let nearestSide = null, nearestDist = Infinity;
+    for (const side in points) {
+      const p = points[side];
+      const d = Math.hypot(mx - p.x, my - p.y);
+      if (d < nearestDist) { nearestDist = d; nearestSide = side; }
+    }
+
+    if (nearestSide && nearestDist <= PROXIMITY) {
+      Object.entries(dots).forEach(([side, d]) => {
+        d.classList.toggle("active", side === nearestSide);
+      });
+    } else {
+      clearActive();
+    }
+  });
+
+  el.addEventListener("mouseleave", clearActive);
 }
 
 function getNodeCenter(node) {
@@ -1258,23 +1309,36 @@ function renderAllArrows(canvasId) {
   const t = getTransform(canvasId);
   svg.innerHTML = "";
 
-  // Defs with scaled arrowheads
+  // Everything below is drawn in CANVAS-SPACE (real node x/y/w/h, unscaled).
+  // A single <g transform="translate(...) scale(...)"> mirrors the same
+  // transform already applied to .canvas-nodes via CSS, so arrowheads,
+  // stroke widths, and the note box all scale together with the boxes —
+  // same relative size at any zoom level, just like Figma/Obsidian.
+  const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  g.setAttribute("transform", `translate(${t.x},${t.y}) scale(${t.scale})`);
+  svg.appendChild(g);
+
+  // Defs with canvas-space arrowheads — sized in the SAME units as node
+  // x/y/w/h, so they scale 1:1 with the boxes via the <g> transform above.
   const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
-  const arrowScale = Math.max(0.5, Math.min(t.scale, 2)); // Clamp scale between 0.5x and 2x
-  const markerW = 10 * arrowScale;
-  const markerH = 7 * arrowScale;
-  const refX = 9 * arrowScale;
-  const refY = 3.5 * arrowScale;
-  const polyPoints = `0 0, ${10 * arrowScale} ${3.5 * arrowScale}, 0 ${7 * arrowScale}`;
-  
+  const ARROW_W = 10;
+  const ARROW_H = 7;
+  const refX = ARROW_W - 1; // pull tip in slightly so the polygon's point sits at the path end
+  const refY = ARROW_H / 2;
+  const polyPoints = `0 0, ${ARROW_W} ${refY}, 0 ${ARROW_H}`;
+
   defs.innerHTML = `
-    <marker id="ah-${canvasId}" markerWidth="${markerW}" markerHeight="${markerH}" refX="${refX}" refY="${refY}" orient="auto">
+    <marker id="ah-${canvasId}" markerUnits="userSpaceOnUse" markerWidth="${ARROW_W}" markerHeight="${ARROW_H}" refX="${refX}" refY="${refY}" orient="auto">
       <polygon points="${polyPoints}" fill="var(--accent)"/>
     </marker>
-    <marker id="ah-sel-${canvasId}" markerWidth="${markerW}" markerHeight="${markerH}" refX="${refX}" refY="${refY}" orient="auto">
+    <marker id="ah-sel-${canvasId}" markerUnits="userSpaceOnUse" markerWidth="${ARROW_W}" markerHeight="${ARROW_H}" refX="${refX}" refY="${refY}" orient="auto">
       <polygon points="${polyPoints}" fill="var(--accent)"/>
     </marker>`;
-  svg.appendChild(defs);
+  g.appendChild(defs);
+
+  // Canvas-space stroke width (will visually scale with zoom via the <g>).
+  const STROKE_WIDTH = 2;
+  const ARROW_GAP = ARROW_W - refX + 1;
 
   cv.arrows.forEach(arrow => {
     const fromNode = cv.nodes.find(n => n.id === arrow.from);
@@ -1282,16 +1346,26 @@ function renderAllArrows(canvasId) {
     if (!fromNode || !toNode) return;
     const fp = getConnectorPos(fromNode, arrow.fromSide);
     const tp = getConnectorPos(toNode, arrow.toSide || "left");
-    const fx = fp.x * t.scale + t.x, fy = fp.y * t.scale + t.y;
-    const tx = tp.x * t.scale + t.x, ty = tp.y * t.scale + t.y;
-    // Control point magnitude proportional to distance, clamped
-    const TENSION = Math.max(60, Math.min(Math.hypot(tx-fx, ty-fy) * 0.45, 280));
+    // Canvas-space coordinates — no scale/pan baked in, the <g> handles that.
+    const fx = fp.x, fy = fp.y;
+    const tx = tp.x, ty = tp.y;
+    // Obsidian-style routing: each endpoint's control point sits a roughly
+    // fixed distance straight out from the node, along the connector side's
+    // direction — independent of how far apart the nodes are. This keeps the
+    // line straight near each box and bending only in the middle, instead of
+    // a single symmetric bulge that gets fatter the further apart nodes are
+    // (which is how a plain proportional-tension bezier looks).
+    const dist = Math.hypot(tx - fx, ty - fy);
+    // Stub length grows a little for very short hops (so it doesn't look like
+    // a sharp kink at point-blank range) but saturates quickly — it does NOT
+    // keep scaling up for long connections the way the old TENSION did.
+    const STUB = Math.max(30, Math.min(dist * 0.5, 80));
     function cpDir(side) {
       switch(side) {
-        case "right":  return [ TENSION, 0];
-        case "left":   return [-TENSION, 0];
-        case "bottom": return [0,  TENSION];
-        case "top":    return [0, -TENSION];
+        case "right":  return [ STUB, 0];
+        case "left":   return [-STUB, 0];
+        case "bottom": return [0,  STUB];
+        case "top":    return [0, -STUB];
         default:       return [0, 0];
       }
     }
@@ -1299,7 +1373,6 @@ function renderAllArrows(canvasId) {
     const [tcx, tcy] = cpDir(arrow.toSide   || "left");
     const d = `M${fx},${fy} C${fx+fcx},${fy+fcy} ${tx+tcx},${ty+tcy} ${tx},${ty}`;
     const isSel = selectedArrowId === arrow.id;
-
     // Hit area
     const hit = document.createElementNS("http://www.w3.org/2000/svg", "path");
     hit.setAttribute("d", d);
@@ -1342,16 +1415,32 @@ function renderAllArrows(canvasId) {
       renderAllArrows(canvasId);
       showCtxMenu(e, { type: "arrow", arrowId: arrow.id });
     });
-    svg.appendChild(hit);
+    g.appendChild(hit);
 
     const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    path.setAttribute("d", d);
     path.setAttribute("class", "arrow-path" + (isSel ? " selected" : ""));
-    path.setAttribute("stroke-width", Math.max(1, 2 / t.scale));
+    path.setAttribute("stroke-width", STROKE_WIDTH);
     path.setAttribute("marker-end", `url(#${isSel ? "ah-sel-" : "ah-"}${canvasId})`);
-    svg.appendChild(path);
+    path.setAttribute("d", d);
 
-    // Midpoint note editor (Obsidian style)
+    // Trim the visible line so it stops right where the arrowhead begins,
+    // instead of drawing the full-length line underneath the marker (which
+    // is what made the curve look like it started inside/under the
+    // rectangle). All distances here are canvas-space units, scaled
+    // automatically by the <g> like everything else.
+    try {
+      const total = hit.getTotalLength();
+      if (total > ARROW_GAP) {
+        path.setAttribute("pathLength", total);
+        path.setAttribute("stroke-dasharray", `${total - ARROW_GAP} ${ARROW_GAP + 1}`);
+        path.setAttribute("stroke-dashoffset", "0");
+      }
+    } catch (e) { /* fall back to full-length path, no trimming */ }
+    g.appendChild(path);
+
+    // Midpoint note editor (Obsidian style) — also canvas-space, so the
+    // note box scales together with the boxes instead of staying a fixed
+    // screen size.
     let mid;
     try {
       const pathLength = path.getTotalLength();
@@ -1419,7 +1508,7 @@ function renderAllArrows(canvasId) {
 
       wrap.appendChild(editor);
       fo.appendChild(wrap);
-      svg.appendChild(fo);
+      g.appendChild(fo);
     }
   });
 }
@@ -2233,4 +2322,3 @@ window.refreshCanvasNodes = function() {
     }
   });
 };
-
