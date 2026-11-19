@@ -1,42 +1,89 @@
 {
   "name": "musegarden-electron",
-  "version": "0.1.0",
+  "version": "0.1.1",
+  "description": "MuseGarden desktop app",
+  "author": "KaeBee2003",
   "main": "main.js",
-
   "scripts": {
     "start": "electron .",
+    "assets": "node scripts/generate-installer-assets.js",
     "package": "electron-packager . MuseGarden --platform=win32 --arch=x64 --icon=icon.ico --out=dist --overwrite",
-    "build": "electron-builder --win portable"
+    "build": "electron-builder --win nsis --publish never",
+    "dist": "electron-builder --win nsis --publish never",
+    "release": "electron-builder --win nsis --publish always"
   },
-
   "build": {
     "appId": "com.musegarden.app",
     "productName": "MuseGarden",
-
     "directories": {
-      "output": "dist"
+      "output": "dist",
+      "buildResources": "build"
     },
-
     "files": [
       "**/*",
       "!dist/**/*",
-      "!node_modules/.cache/**/*"
+      "!dist-*/**/*",
+      "!out/**/*",
+      "!release/**/*",
+      "!build/**/*",
+      "!Icons/**/*",
+      "!scripts/**/*",
+      "!.github/**/*",
+      "!node_modules/.cache/**/*",
+      "!**/node_modules.zip",
+      "!MeowSick Library Hub4/**/*",
+      "!Ideation.md",
+      "!MuseGarden.figcraft",
+      "!test.canvas",
+      "!**/*.log",
+      "!start.bat",
+      "!start.sh",
+      "!README.md"
     ],
-
     "win": {
-      "icon": "icon.ico",
+      "icon": "build/icon.ico",
       "target": [
         {
-          "target": "portable",
-          "arch": ["x64"]
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
         }
       ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "MuseGarden",
+      "uninstallDisplayName": "MuseGarden",
+      "artifactName": "MuseGarden-Setup-${version}.${ext}",
+      "installerSidebar": "build/installerSidebar.bmp",
+      "uninstallerSidebar": "build/uninstallerSidebar.bmp",
+      "installerHeader": "build/installerHeader.bmp",
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "deleteAppDataOnUninstall": false
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "KaeBee2003",
+      "repo": "MuseGarden",
+      "releaseType": "release"
     }
   },
-
   "devDependencies": {
+    "bmp-js": "^0.1.0",
     "electron": "^26.6.10",
     "electron-builder": "^26.0.12",
-    "electron-packager": "^17.1.0"
+    "electron-packager": "^17.1.0",
+    "png-to-ico": "^3.0.2",
+    "sharp": "^0.35.5"
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.11"
   }
 }
